@@ -3,6 +3,8 @@
 ransomware_sim_test/*
 !ransomware_sim_test/.gitkeep
 !ransomware_sim_test/actions_log.csv
+!ransomware_sim_test/manifest.csv
+!ransomware_sim_test/symmetric.key
 
 experiments/*
 archive/*

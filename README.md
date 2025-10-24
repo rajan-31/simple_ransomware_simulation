@@ -66,6 +66,20 @@ python3 safe_ransom_sim_simple.py --action clean
 
 ## Example Log Entry
 
-| action  | start_time                | time_total(s) | files_count | total_size(KB) | progress_percent | notes                            |
-| ------- | ------------------------- | ------------- | ----------- | -------------- | ---------------- |----------------------------------|
-| encrypt | 2025-10-24T20:12:32+05:30 | 0.041         | 3           | 1.62           | 100.0            | Exp 100 - simple encryption test |
+| action | start_time                  | time_total(s) | files_count | total_size(KB) | progress_percent | notes                           |
+|--------|-----------------------------|---------------|-------------|----------------|------------------|---------------------------------|
+| encrypt| 2025-10-24T20:42:37.389893+05:30 | 0.136        | 100         | 15964196       | 100.0            | Exp 01 - test encryption for 100 files
+
+## Example Manifest
+
+| filename              | orig_hash                                                                 | encrypted_name            | encrypted_size | decrypted_hash | status    |
+|-----------------------|---------------------------------------------------------------------------|---------------------------|----------------|----------------|-----------|
+| data.csv              | d8066f036c8080cdcb9b2ae93a5c9cde775a6bfce0571170e13f5114c787c58a | data.csv.enc              | 120            |                | encrypted |
+| image_placeholder.bin | 0a56e62055eb2aff8fe9807836abb20dbb66b0b6e1c2a06e3266572933ad4ab1 | image_placeholder.bin.enc | 780            |                | encrypted |
+| notes.txt             | 081d2583dc1497b444cf40b92a553002225dd93797f05a44ef3947fa44380a6e | notes.txt.enc             | 184            |                | encrypted
+
+| filename              | orig_hash                                                                 | encrypted_name            | encrypted_size | decrypted_hash                                                                 | status        |
+|-----------------------|---------------------------------------------------------------------------|---------------------------|----------------|-------------------------------------------------------------------------------|---------------|
+| data.csv              | d8066f036c8080cdcb9b2ae93a5c9cde775a6bfce0571170e13f5114c787c58a | data.csv.enc              | 120            | d8066f036c8080cdcb9b2ae93a5c9cde775a6bfce0571170e13f5114c787c58a | decrypted_ok |
+| image_placeholder.bin | 0a56e62055eb2aff8fe9807836abb20dbb66b0b6e1c2a06e3266572933ad4ab1 | image_placeholder.bin.enc | 780            | 0a56e62055eb2aff8fe9807836abb20dbb66b0b6e1c2a06e3266572933ad4ab1 | decrypted_ok |
+| notes.txt             | 081d2583dc1497b444cf40b92a553002225dd93797f05a44ef3947fa44380a6e | notes.txt.enc             | 184            | 081d2583dc1497b444cf40b92a553002225dd93797f05a44ef3947fa44380a6e | decrypted_ok

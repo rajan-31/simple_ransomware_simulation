@@ -179,7 +179,7 @@ def action_clean():
     start = time.time()
     if BASE.exists():
         for item in BASE.iterdir():
-            if item == LOG_FILE or item.name == ".gitkeep":
+            if item == LOG_FILE or item == MANIFEST or item == KEY_FILE or item.name == ".gitkeep":
                 continue
             if item.is_dir():
                 shutil.rmtree(item)
