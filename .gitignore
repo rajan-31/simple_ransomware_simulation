@@ -2,6 +2,7 @@
 
 ransomware_sim_test/*
 !ransomware_sim_test/.gitkeep
+!ransomware_sim_test/actions_log.csv
 
 experiments/*
 archive/*
