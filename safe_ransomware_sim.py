@@ -2,6 +2,8 @@
 
 import argparse
 import os
+import hashlib
+import csv
 from pathlib import Path
 from cryptography.fernet import Fernet
 
@@ -9,12 +11,22 @@ from cryptography.fernet import Fernet
 BASE = Path("ransomware_sim_test")
 SAMPLE_DIR = BASE / "original"
 ENCRYPTED_DIR = BASE / "encrypted"
+DECRYPTED_DIR = BASE / "decrypted"
+MANIFEST = BASE / "manifest.csv"
 KEY_FILE = BASE / "symmetric.key"
 
 def ensure_dirs():
     BASE.mkdir(exist_ok=True)
     SAMPLE_DIR.mkdir(exist_ok=True)
     ENCRYPTED_DIR.mkdir(exist_ok=True)
+    DECRYPTED_DIR.mkdir(exist_ok=True)
+
+def sha256(path: Path):
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            h.update(chunk)
+    return h.hexdigest()
 
 def action_create():
     ensure_dirs()
@@ -39,19 +51,69 @@ def load_or_generate_key():
 def action_encrypt():
     ensure_dirs()
     f = load_or_generate_key()
+    rows = []
     files = sorted([p for p in SAMPLE_DIR.iterdir() if p.is_file()])
     if not files:
         print("[encrypt] No sample files found. Run --action create first.")
         return
     for p in files:
+        orig_hash = sha256(p)
         token = f.encrypt(p.read_bytes())
         out = ENCRYPTED_DIR / (p.name + ".enc")
         out.write_bytes(token)
+        rows.append({
+            "filename": p.name,
+            "orig_hash": orig_hash,
+            "encrypted_name": out.name,
+            "encrypted_size": out.stat().st_size,
+            "decrypted_hash": "",
+            "status": "encrypted"
+        })
         print(f"[encrypt] {p.name} -> {out.name}")
+    with MANIFEST.open("w", newline="") as mf:
+        writer = csv.DictWriter(mf, fieldnames=["filename","orig_hash","encrypted_name","encrypted_size","decrypted_hash","status"])
+        writer.writeheader()
+        for r in rows:
+            writer.writerow(r)
+    print(f"[encrypt] Manifest written to {MANIFEST}")
+
+def action_decrypt():
+    ensure_dirs()
+    if not KEY_FILE.exists():
+        print("[decrypt] Error: key file not found. Run --action encrypt first.")
+        return
+    if not MANIFEST.exists():
+        print("[decrypt] Error: manifest not found. Run --action encrypt first.")
+        return
+    f = load_or_generate_key()
+    updated = []
+    with MANIFEST.open("r", newline="") as mf:
+        reader = csv.DictReader(mf)
+        for row in reader:
+            enc_path = ENCRYPTED_DIR / row["encrypted_name"]
+            try:
+                token = enc_path.read_bytes()
+                plaintext = f.decrypt(token)
+                out = DECRYPTED_DIR / row["filename"]
+                out.write_bytes(plaintext)
+                dec_hash = sha256(out)
+                row["decrypted_hash"] = dec_hash
+                row["status"] = "decrypted_ok" if dec_hash == row["orig_hash"] else "decrypted_mismatch"
+                print(f"[decrypt] {enc_path.name} -> {out.name} ({row['status']})")
+            except Exception as e:
+                row["status"] = f"decrypt_error: {e}"
+                print(f"[decrypt] Failed to decrypt {row.get('encrypted_name','?')}: {e}")
+            updated.append(row)
+    with MANIFEST.open("w", newline="") as mf:
+        writer = csv.DictWriter(mf, fieldnames=["filename","orig_hash","encrypted_name","encrypted_size","decrypted_hash","status"])
+        writer.writeheader()
+        for r in updated:
+            writer.writerow(r)
+    print(f"[decrypt] Manifest updated at {MANIFEST}")
 
 def parse_args():
     p = argparse.ArgumentParser(description="Safe ransomware simulation.")
-    p.add_argument("--action", required=True, choices=["create", "encrypt"], help="Action to perform")
+    p.add_argument("--action", required=True, choices=["create", "encrypt", "decrypt"], help="Action to perform")
     return p.parse_args()
 
 def main():
@@ -60,6 +122,8 @@ def main():
         action_create()
     elif args.action == "encrypt":
         action_encrypt()
+    elif args.action == "decrypt":
+        action_decrypt()
 
 if __name__ == "__main__":
     main()
