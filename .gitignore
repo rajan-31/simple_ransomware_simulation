@@ -1,4 +1,7 @@
-ransomware_sim_test/*
 .idea
 
+ransomware_sim_test/*
 !ransomware_sim_test/.gitkeep
+
+experiments/*
+archive/*

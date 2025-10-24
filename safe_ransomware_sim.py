@@ -31,7 +31,6 @@ DECRYPTED_DIR = BASE / "decrypted"
 MANIFEST = BASE / "manifest.csv"
 KEY_FILE = BASE / "symmetric.key"
 LOG_FILE = BASE / "actions_log.csv"
-
 IST = timezone(timedelta(hours=5, minutes=30))
 
 # ---------------------------------------------------------
@@ -53,15 +52,15 @@ def log_action(action, start_time, time_total=None, files_count=None, total_size
     ensure_dirs()
     newfile = not LOG_FILE.exists()
     with LOG_FILE.open("a", newline="") as lf:
-        writer = csv.DictWriter(lf, fieldnames=["action", "start_time", "time_total (s)", "files_count", "total_size (KB)", "progress_percent", "notes"])
+        writer = csv.DictWriter(lf, fieldnames=["action", "start_time", "time_total(s)", "files_count", "total_size(KB)", "progress_percent", "notes"])
         if newfile:
             writer.writeheader()
         writer.writerow({
             "action": action,
             "start_time": start_time,
-            "time_total": f"{time_total:.3f}" if time_total is not None else "",
+            "time_total(s)": f"{time_total:.3f}" if time_total is not None else "",
             "files_count": files_count if files_count is not None else "",
-            "total_size": total_size if total_size is not None else "",
+            "total_size(KB)": total_size if total_size is not None else "",
             "progress_percent": f"{progress:.1f}" if progress is not None else "",
             "notes": notes
         })
@@ -180,7 +179,7 @@ def action_clean():
     start = time.time()
     if BASE.exists():
         for item in BASE.iterdir():
-            if item == LOG_FILE:
+            if item == LOG_FILE or item.name == ".gitkeep":
                 continue
             if item.is_dir():
                 shutil.rmtree(item)
