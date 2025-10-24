@@ -1,19 +1,34 @@
 #!/usr/bin/env python3
+"""
+Features
+  - create   : create sample files in the test folder
+  - encrypt  : encrypt those sample files (writes .enc files)
+  - decrypt  : decrypt using the stored key (writes decrypted files)
+  - clean    : delete the entire test folder
+
+Usage examples:
+  python3 safe_ransom_sim_simple.py --action create
+  python3 safe_ransom_sim_simple.py --action encrypt
+  python3 safe_ransom_sim_simple.py --action decrypt
+  python3 safe_ransom_sim_simple.py --action clean
+"""
 
 import argparse
+import shutil
 import os
 import hashlib
 import csv
 from pathlib import Path
 from cryptography.fernet import Fernet
 
-# Configuration
+# ----- Configuration -----
 BASE = Path("ransomware_sim_test")
 SAMPLE_DIR = BASE / "original"
 ENCRYPTED_DIR = BASE / "encrypted"
 DECRYPTED_DIR = BASE / "decrypted"
 MANIFEST = BASE / "manifest.csv"
 KEY_FILE = BASE / "symmetric.key"
+# ---------------------------------------------------------
 
 def ensure_dirs():
     BASE.mkdir(exist_ok=True)
@@ -30,6 +45,7 @@ def sha256(path: Path):
 
 def action_create():
     ensure_dirs()
+    # sample files
     (SAMPLE_DIR / "notes.txt").write_text(
         "This is a sample text file for encryption simulation.\nDo not use real data."
     )
@@ -104,6 +120,7 @@ def action_decrypt():
                 row["status"] = f"decrypt_error: {e}"
                 print(f"[decrypt] Failed to decrypt {row.get('encrypted_name','?')}: {e}")
             updated.append(row)
+    # rewrite manifest with results
     with MANIFEST.open("w", newline="") as mf:
         writer = csv.DictWriter(mf, fieldnames=["filename","orig_hash","encrypted_name","encrypted_size","decrypted_hash","status"])
         writer.writeheader()
@@ -111,19 +128,32 @@ def action_decrypt():
             writer.writerow(r)
     print(f"[decrypt] Manifest updated at {MANIFEST}")
 
+def action_clean():
+    if BASE.exists():
+        shutil.rmtree(BASE)
+        print(f"[clean] Removed test folder: {BASE.resolve()}")
+    else:
+        print("[clean] Nothing to remove.")
+
 def parse_args():
-    p = argparse.ArgumentParser(description="Safe ransomware simulation.")
-    p.add_argument("--action", required=True, choices=["create", "encrypt", "decrypt"], help="Action to perform")
+    p = argparse.ArgumentParser(description="Safe ransomware simulation (minimal).")
+    p.add_argument("--action", required=True, choices=["create","encrypt","decrypt","clean"], help="Single action to perform")
     return p.parse_args()
 
 def main():
     args = parse_args()
-    if args.action == "create":
+    a = args.action
+    print(f"[main] Action: {a}")
+    if a == "create":
         action_create()
-    elif args.action == "encrypt":
+    elif a == "encrypt":
         action_encrypt()
-    elif args.action == "decrypt":
+    elif a == "decrypt":
         action_decrypt()
+    elif a == "clean":
+        action_clean()
+    else:
+        print("[main] Unknown action (this should not occur).")
 
 if __name__ == "__main__":
     main()
