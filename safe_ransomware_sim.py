@@ -53,7 +53,7 @@ def log_action(action, start_time, time_total=None, files_count=None, total_size
     ensure_dirs()
     newfile = not LOG_FILE.exists()
     with LOG_FILE.open("a", newline="") as lf:
-        writer = csv.DictWriter(lf, fieldnames=["action", "start_time", "time_total", "files_count", "total_size", "progress_percent", "notes"])
+        writer = csv.DictWriter(lf, fieldnames=["action", "start_time", "time_total (s)", "files_count", "total_size (KB)", "progress_percent", "notes"])
         if newfile:
             writer.writeheader()
         writer.writerow({
@@ -179,7 +179,13 @@ def action_decrypt():
 def action_clean():
     start = time.time()
     if BASE.exists():
-        shutil.rmtree(BASE)
+        for item in BASE.iterdir():
+            if item == LOG_FILE:
+                continue
+            if item.is_dir():
+                shutil.rmtree(item)
+            else:
+                item.unlink(missing_ok=True)
         print(f"[clean] Removed test folder: {BASE.resolve()}")
     else:
         print("[clean] Nothing to remove.")
